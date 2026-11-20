@@ -6,7 +6,9 @@
 <title>渥美棚卸管理</title>
 
 <style>
-*{box-sizing:border-box;}
+*{
+box-sizing:border-box;
+}
 
 body{
 margin:0;
@@ -80,23 +82,30 @@ padding:10px;
 }
 
 td{
-padding:8px;
-text-align:center;
+padding:10px;
 border-bottom:1px solid #ddd;
+text-align:center;
 }
 
 .product-name{
 text-align:left;
 font-weight:bold;
-min-width:160px;
+min-width:180px;
+}
+
+.stock-wrap{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
 }
 
 .pm{
-width:55px;
-height:55px;
+width:48px;
+height:48px;
 background:#666;
 color:#fff;
-font-size:28px;
+font-size:24px;
 font-weight:bold;
 border-radius:12px;
 }
@@ -104,7 +113,7 @@ border-radius:12px;
 .stock{
 font-size:24px;
 font-weight:bold;
-min-width:45px;
+min-width:50px;
 display:inline-block;
 }
 
@@ -116,12 +125,16 @@ font-weight:bold;
 .name-input{
 width:100%;
 padding:6px;
-font-size:14px;
 border:1px solid #007bff;
 border-radius:5px;
+font-size:14px;
 }
 
 @media(max-width:600px){
+
+body{
+padding:10px;
+}
 
 th,td{
 font-size:12px;
@@ -129,9 +142,9 @@ padding:6px;
 }
 
 .pm{
-width:55px;
-height:55px;
-font-size:28px;
+width:50px;
+height:50px;
+font-size:26px;
 }
 
 .stock{
@@ -139,8 +152,8 @@ font-size:24px;
 }
 }
 </style>
-</head>
 
+</head>
 <body>
 
 <h1>🍾 渥美棚卸管理</h1>
@@ -172,9 +185,7 @@ onclick="addProduct()">
 <thead>
 <tr>
 <th>商品名</th>
-<th>合計</th>
-<th>冷蔵庫</th>
-<th>棚</th>
+<th>在庫数</th>
 </tr>
 </thead>
 
@@ -192,19 +203,22 @@ JSON.parse(
 localStorage.getItem("inventoryData")
 ) || [];
 
-/* NaN対策 */
+/* 古いデータ対策 */
+
 products.forEach(item=>{
 
-if(item.fridge === undefined){
-item.fridge = 0;
-}
+if(item.stock===undefined){
 
-if(item.shelf === undefined){
+if(item.fridge!==undefined || item.shelf!==undefined){
 
-if(item.backyard !== undefined){
-item.shelf = Number(item.backyard) || 0;
+item.stock =
+Number(item.fridge || 0) +
+Number(item.shelf || 0);
+
 }else{
-item.shelf = 0;
+
+item.stock = 0;
+
 }
 
 }
@@ -233,14 +247,18 @@ document
 .trim();
 
 if(!name){
+
 alert("商品名を入力してください");
+
 return;
+
 }
 
 products.push({
+
 name:name,
-fridge:0,
-shelf:0
+stock:0
+
 });
 
 document
@@ -248,6 +266,7 @@ document
 .value="";
 
 saveData();
+
 renderTable();
 
 }
@@ -256,21 +275,21 @@ renderTable();
 
 function changeStock(
 index,
-location,
 amount
 ){
 
-products[index][location] =
-Number(products[index][location] || 0)
+products[index].stock =
+Number(products[index].stock || 0)
 + amount;
 
-if(
-products[index][location] < 0
-){
-products[index][location] = 0;
+if(products[index].stock < 0){
+
+products[index].stock = 0;
+
 }
 
 saveData();
+
 renderTable();
 
 }
@@ -282,6 +301,7 @@ function deleteProduct(index){
 products.splice(index,1);
 
 saveData();
+
 renderTable();
 
 }
@@ -292,14 +312,16 @@ let deleteTimer=null;
 
 function startDelete(index){
 
-deleteTimer=
+deleteTimer =
 setTimeout(()=>{
 
 if(confirm(
-products[index].name+
+products[index].name +
 " を削除しますか？"
 )){
+
 deleteProduct(index);
+
 }
 
 },1500);
@@ -320,7 +342,7 @@ document.getElementById(
 "nameText"+index
 ).style.display="none";
 
-const input=
+const input =
 document.getElementById(
 "nameInput"+index
 );
@@ -335,23 +357,22 @@ input.select();
 
 function saveName(index){
 
-const input=
+const input =
 document.getElementById(
 "nameInput"+index
 );
 
-const value=
+const value =
 input.value.trim();
 
 if(value===""){
 
-input.value=
+input.value =
 products[index].name;
 
 }else{
 
-products[index].name=
-value;
+products[index].name = value;
 
 saveData();
 
@@ -361,32 +382,26 @@ renderTable();
 
 }
 
-/* 描画 */
+/* 画面描画 */
 
 function renderTable(){
 
-const tbody=
+const tbody =
 document.getElementById(
 "productList"
 );
 
 tbody.innerHTML="";
 
-let totalAll=0;
+let totalAll = 0;
 
 products.forEach(
 (item,index)=>{
 
-const fridge =
-Number(item.fridge || 0);
+const stock =
+Number(item.stock || 0);
 
-const shelf =
-Number(item.shelf || 0);
-
-const total =
-fridge + shelf;
-
-totalAll += total;
+totalAll += stock;
 
 tbody.innerHTML += `
 
@@ -395,6 +410,7 @@ tbody.innerHTML += `
 <td class="product-name">
 
 <span
+
 id="nameText${index}"
 
 onclick="editName(${index})"
@@ -426,53 +442,30 @@ style="display:none;">
 
 </td>
 
-<td class="${
-total===0 ? 'red' : ''
-}">
-${total}
-</td>
-
 <td>
+
+<div class="stock-wrap">
 
 <button
 class="pm"
-onclick="changeStock(${index},'fridge',-1)">
-−
+onclick="changeStock(${index},-1)">
+－
 </button>
 
-<span class="stock ${
-fridge===0 ? 'red' : ''
+<span
+class="stock ${
+stock===0 ? 'red' : ''
 }">
-${fridge}
+${stock}
 </span>
 
 <button
 class="pm"
-onclick="changeStock(${index},'fridge',1)">
+onclick="changeStock(${index},1)">
 ＋
 </button>
 
-</td>
-
-<td>
-
-<button
-class="pm"
-onclick="changeStock(${index},'shelf',-1)">
-−
-</button>
-
-<span class="stock ${
-shelf===0 ? 'red' : ''
-}">
-${shelf}
-</span>
-
-<button
-class="pm"
-onclick="changeStock(${index},'shelf',1)">
-＋
-</button>
+</div>
 
 </td>
 
@@ -484,8 +477,7 @@ onclick="changeStock(${index},'shelf',1)">
 
 document.getElementById(
 "grandTotal"
-).textContent =
-totalAll;
+).textContent = totalAll;
 
 }
 
