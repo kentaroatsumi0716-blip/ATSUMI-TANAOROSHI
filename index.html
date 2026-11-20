@@ -6,9 +6,7 @@
 <title>渥美棚卸管理</title>
 
 <style>
-*{
-box-sizing:border-box;
-}
+*{box-sizing:border-box;}
 
 body{
 margin:0;
@@ -194,6 +192,27 @@ JSON.parse(
 localStorage.getItem("inventoryData")
 ) || [];
 
+/* NaN対策 */
+products.forEach(item=>{
+
+if(item.fridge === undefined){
+item.fridge = 0;
+}
+
+if(item.shelf === undefined){
+
+if(item.backyard !== undefined){
+item.shelf = Number(item.backyard) || 0;
+}else{
+item.shelf = 0;
+}
+
+}
+
+});
+
+/* 保存 */
+
 function saveData(){
 
 localStorage.setItem(
@@ -202,6 +221,8 @@ JSON.stringify(products)
 );
 
 }
+
+/* 商品追加 */
 
 function addProduct(){
 
@@ -231,24 +252,30 @@ renderTable();
 
 }
 
+/* 在庫変更 */
+
 function changeStock(
 index,
 location,
 amount
 ){
 
-products[index][location]+=amount;
+products[index][location] =
+Number(products[index][location] || 0)
++ amount;
 
 if(
 products[index][location] < 0
 ){
-products[index][location]=0;
+products[index][location] = 0;
 }
 
 saveData();
 renderTable();
 
 }
+
+/* 削除 */
 
 function deleteProduct(index){
 
@@ -259,6 +286,8 @@ renderTable();
 
 }
 
+/* 長押し削除 */
+
 let deleteTimer=null;
 
 function startDelete(index){
@@ -266,12 +295,10 @@ function startDelete(index){
 deleteTimer=
 setTimeout(()=>{
 
-if(
-confirm(
+if(confirm(
 products[index].name+
 " を削除しますか？"
-)
-){
+)){
 deleteProduct(index);
 }
 
@@ -284,6 +311,8 @@ function cancelDelete(){
 clearTimeout(deleteTimer);
 
 }
+
+/* 商品名編集 */
 
 function editName(index){
 
@@ -321,7 +350,8 @@ products[index].name;
 
 }else{
 
-products[index].name=value;
+products[index].name=
+value;
 
 saveData();
 
@@ -330,6 +360,8 @@ saveData();
 renderTable();
 
 }
+
+/* 描画 */
 
 function renderTable(){
 
@@ -345,13 +377,18 @@ let totalAll=0;
 products.forEach(
 (item,index)=>{
 
-const total=
-item.fridge+
-item.shelf;
+const fridge =
+Number(item.fridge || 0);
 
-totalAll+=total;
+const shelf =
+Number(item.shelf || 0);
 
-tbody.innerHTML+=`
+const total =
+fridge + shelf;
+
+totalAll += total;
+
+tbody.innerHTML += `
 
 <tr>
 
@@ -399,25 +436,19 @@ ${total}
 
 <button
 class="pm"
-onclick="changeStock(
-${index},
-'fridge',
--1)">
+onclick="changeStock(${index},'fridge',-1)">
 −
 </button>
 
 <span class="stock ${
-item.fridge===0 ? 'red' : ''
+fridge===0 ? 'red' : ''
 }">
-${item.fridge}
+${fridge}
 </span>
 
 <button
 class="pm"
-onclick="changeStock(
-${index},
-'fridge',
-1)">
+onclick="changeStock(${index},'fridge',1)">
 ＋
 </button>
 
@@ -427,25 +458,19 @@ ${index},
 
 <button
 class="pm"
-onclick="changeStock(
-${index},
-'shelf',
--1)">
+onclick="changeStock(${index},'shelf',-1)">
 −
 </button>
 
 <span class="stock ${
-item.shelf===0 ? 'red' : ''
+shelf===0 ? 'red' : ''
 }">
-${item.shelf}
+${shelf}
 </span>
 
 <button
 class="pm"
-onclick="changeStock(
-${index},
-'shelf',
-1)">
+onclick="changeStock(${index},'shelf',1)">
 ＋
 </button>
 
@@ -459,7 +484,8 @@ ${index},
 
 document.getElementById(
 "grandTotal"
-).textContent=totalAll;
+).textContent =
+totalAll;
 
 }
 
