@@ -2,153 +2,137 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>棚卸管理アプリ</title>
-
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>渥美棚卸管理</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
-    margin:0;
-    padding:15px;
-    font-family:sans-serif;
-    background:#f5f5f5;
-    color:#000;
+margin:0;
+padding:15px;
+font-family:sans-serif;
+background:#f5f5f5;
+color:#000;
 }
 
 h1{
-    text-align:center;
-    margin-bottom:15px;
+text-align:center;
 }
 
 .summary{
-    background:#fff;
-    padding:15px;
-    border-radius:10px;
-    text-align:center;
-    font-size:22px;
-    font-weight:bold;
-    margin-bottom:15px;
-    box-shadow:0 2px 5px rgba(0,0,0,.1);
+background:#fff;
+padding:15px;
+border-radius:10px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+margin-bottom:15px;
+box-shadow:0 2px 5px rgba(0,0,0,.1);
 }
 
 .add-area{
-    display:flex;
-    gap:10px;
-    margin-bottom:15px;
+display:flex;
+gap:10px;
+margin-bottom:15px;
 }
 
 .add-area input{
-    flex:1;
+flex:1;
 }
 
 input{
-    padding:12px;
-    border:1px solid #ccc;
-    border-radius:8px;
-    font-size:16px;
+padding:12px;
+border:1px solid #ccc;
+border-radius:8px;
+font-size:16px;
 }
 
 button{
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
+border:none;
+border-radius:8px;
+cursor:pointer;
 }
 
 .add-btn{
-    background:#28a745;
-    color:#fff;
-    padding:0 20px;
-}
-
-.image-btn{
-    background:#ff9800;
-    color:#fff;
-    padding:12px 20px;
-    width:100%;
-    margin-bottom:15px;
+background:#28a745;
+color:white;
+padding:12px 20px;
 }
 
 .table-wrap{
-    background:#fff;
-    border-radius:10px;
-    overflow-x:auto;
-    box-shadow:0 2px 5px rgba(0,0,0,.1);
+background:white;
+border-radius:10px;
+overflow-x:auto;
 }
 
 table{
-    width:100%;
-    border-collapse:collapse;
+width:100%;
+border-collapse:collapse;
 }
 
 th{
-    background:#007bff;
-    color:#fff;
-    padding:10px;
-    white-space:nowrap;
+background:#007bff;
+color:white;
+padding:10px;
 }
 
 td{
-    padding:8px;
-    border-bottom:1px solid #ddd;
-    text-align:center;
-    white-space:nowrap;
-    color:#000;
+padding:8px;
+text-align:center;
+border-bottom:1px solid #ddd;
 }
 
 .product-name{
-    text-align:left;
-    font-weight:bold;
+text-align:left;
+font-weight:bold;
+min-width:150px;
 }
 
 .pm{
-    width:32px;
-    height:32px;
-    background:#666;
-    color:#fff;
-    font-size:18px;
-}
-
-.stock{
-    font-weight:bold;
-    font-size:18px;
-    min-width:25px;
-    display:inline-block;
-}
-
-.red{
-    color:red;
+width:32px;
+height:32px;
+background:#666;
+color:white;
+font-size:18px;
 }
 
 .delete-btn{
-    background:#dc3545;
-    color:#fff;
-    padding:8px 10px;
+background:#dc3545;
+color:white;
+padding:8px 12px;
+}
+
+.red{
+color:red;
+font-weight:bold;
+}
+
+.stock{
+font-weight:bold;
+font-size:18px;
+}
+
+.name-input{
+width:100%;
+padding:5px;
+font-size:14px;
 }
 
 @media(max-width:600px){
 
-body{
-    padding:10px;
-}
-
 th,td{
-    font-size:12px;
-    padding:6px;
+font-size:12px;
+padding:6px;
 }
 
 .pm{
-    width:28px;
-    height:28px;
-    font-size:16px;
+width:28px;
+height:28px;
 }
 
 .stock{
-    font-size:16px;
+font-size:16px;
 }
 }
 </style>
@@ -178,14 +162,6 @@ onclick="addProduct()">
 
 </div>
 
-<button
-id="saveImageBtn"
-class="image-btn">
-📷 一覧画像保存
-</button>
-
-<div id="captureArea">
-
 <div class="table-wrap">
 
 <table>
@@ -207,8 +183,6 @@ class="image-btn">
 
 </div>
 
-</div>
-
 <script>
 
 let products =
@@ -218,39 +192,38 @@ localStorage.getItem("inventoryData")
 
 function saveData(){
 
-    localStorage.setItem(
-        "inventoryData",
-        JSON.stringify(products)
-    );
+localStorage.setItem(
+"inventoryData",
+JSON.stringify(products)
+);
 
 }
 
 function addProduct(){
 
-    const input =
-    document.getElementById(
-        "productName"
-    );
+const name =
+document
+.getElementById("productName")
+.value
+.trim();
 
-    const name =
-    input.value.trim();
+if(!name){
+alert("商品名を入力してください");
+return;
+}
 
-    if(name===""){
-        alert("商品名を入力してください");
-        return;
-    }
+products.push({
+name:name,
+fridge:0,
+backyard:0
+});
 
-    products.push({
-        name:name,
-        fridge:0,
-        backyard:0
-    });
+document
+.getElementById("productName")
+.value="";
 
-    saveData();
-
-    input.value="";
-
-    renderTable();
+saveData();
+renderTable();
 
 }
 
@@ -260,211 +233,239 @@ location,
 amount
 ){
 
-    products[index][location] += amount;
+products[index][location]+=amount;
 
-    if(
-        products[index][location] < 0
-    ){
-        products[index][location] = 0;
-    }
+if(
+products[index][location] < 0
+){
+products[index][location]=0;
+}
 
-    saveData();
-
-    renderTable();
+saveData();
+renderTable();
 
 }
 
 function deleteProduct(index){
 
-    if(
-        !confirm(
-            products[index].name +
-            " を削除しますか？"
-        )
-    ){
-        return;
-    }
+if(
+!confirm(
+products[index].name +
+" を削除しますか？"
+)
+){
+return;
+}
 
-    products.splice(index,1);
+products.splice(index,1);
 
-    saveData();
+saveData();
+renderTable();
 
-    renderTable();
+}
+
+function editName(index){
+
+document.getElementById(
+"nameText"+index
+).style.display="none";
+
+const input =
+document.getElementById(
+"nameInput"+index
+);
+
+input.style.display="block";
+
+input.focus();
+
+input.select();
+
+}
+
+function saveName(index){
+
+const input =
+document.getElementById(
+"nameInput"+index
+);
+
+const value =
+input.value.trim();
+
+if(value===""){
+
+alert(
+"商品名を入力してください"
+);
+
+input.value =
+products[index].name;
+
+}else{
+
+products[index].name =
+value;
+
+saveData();
+
+}
+
+renderTable();
 
 }
 
 function renderTable(){
 
-    const tbody =
-    document.getElementById(
-        "productList"
-    );
+const tbody =
+document.getElementById(
+"productList"
+);
 
-    tbody.innerHTML = "";
+tbody.innerHTML="";
 
-    let grandTotal = 0;
+let totalAll=0;
 
-    products.forEach(
-    (item,index)=>{
+products.forEach(
 
-        const total =
-        item.fridge +
-        item.backyard;
+(item,index)=>{
 
-        grandTotal += total;
+const total =
+item.fridge +
+item.backyard;
 
-        tbody.innerHTML += `
-        <tr>
+totalAll += total;
 
-        <td class="product-name">
-        ${item.name}
-        </td>
+tbody.innerHTML += `
 
-        <td class="${
-            total===0 ? 'red' : ''
-        }">
-        ${total}
-        </td>
+<tr>
 
-        <td>
+<td class="product-name">
 
-        <button
-        class="pm"
-        onclick="
-        changeStock(
-        ${index},
-        'fridge',
-        -1
-        )">
-        -
-        </button>
+<span
+id="nameText${index}"
+onclick="editName(${index})"
+style="
+cursor:pointer;
+display:block;
+padding:5px;
+">
+${item.name}
+</span>
 
-        <span
-        class="stock ${
-            item.fridge===0
-            ? 'red'
-            : ''
-        }">
-        ${item.fridge}
-        </span>
+<input
+type="text"
+id="nameInput${index}"
+class="name-input"
+value="${item.name}"
+onblur="saveName(${index})"
+style="display:none;">
 
-        <button
-        class="pm"
-        onclick="
-        changeStock(
-        ${index},
-        'fridge',
-        1
-        )">
-        +
-        </button>
+</td>
 
-        </td>
+<td class="${
+total===0 ? "red" : ""
+}">
+${total}
+</td>
 
-        <td>
+<td>
 
-        <button
-        class="pm"
-        onclick="
-        changeStock(
-        ${index},
-        'backyard',
-        -1
-        )">
-        -
-        </button>
+<button
+class="pm"
+onclick="
+changeStock(
+${index},
+'fridge',
+-1
+)">
+-
+</button>
 
-        <span
-        class="stock ${
-            item.backyard===0
-            ? 'red'
-            : ''
-        }">
-        ${item.backyard}
-        </span>
+<span
+class="stock ${
+item.fridge===0
+? 'red'
+: ''
+}">
+${item.fridge}
+</span>
 
-        <button
-        class="pm"
-        onclick="
-        changeStock(
-        ${index},
-        'backyard',
-        1
-        )">
-        +
-        </button>
+<button
+class="pm"
+onclick="
+changeStock(
+${index},
+'fridge',
+1
+)">
++
+</button>
 
-        </td>
+</td>
 
-        <td>
+<td>
 
-        <button
-        class="delete-btn"
-        onclick="
-        deleteProduct(
-        ${index}
-        )">
-        🗑
-        </button>
+<button
+class="pm"
+onclick="
+changeStock(
+${index},
+'backyard',
+-1
+)">
+-
+</button>
 
-        </td>
+<span
+class="stock ${
+item.backyard===0
+? 'red'
+: ''
+}">
+${item.backyard}
+</span>
 
-        </tr>
-        `;
-    });
+<button
+class="pm"
+onclick="
+changeStock(
+${index},
+'backyard',
+1
+)">
++
+</button>
 
-    document.getElementById(
-        "grandTotal"
-    ).textContent = grandTotal;
+</td>
 
-}
+<td>
 
-document
-.getElementById("saveImageBtn")
-.addEventListener(
-"click",
-async ()=>{
+<button
+class="delete-btn"
+onclick="
+deleteProduct(
+${index}
+)">
+🗑
+</button>
 
-    const area =
-    document.getElementById(
-        "captureArea"
-    );
+</td>
 
-    const canvas =
-    await html2canvas(
-        area,
-        {
-            scale:2,
-            useCORS:true
-        }
-    );
+</tr>
 
-    const link =
-    document.createElement("a");
-
-    const now =
-    new Date();
-
-    const fileName =
-    "棚卸一覧_" +
-    now.getFullYear() +
-    ("0"+(now.getMonth()+1)).slice(-2) +
-    ("0"+now.getDate()).slice(-2) +
-    "_" +
-    ("0"+now.getHours()).slice(-2) +
-    ("0"+now.getMinutes()).slice(-2) +
-    ".png";
-
-    link.download = fileName;
-
-    link.href =
-    canvas.toDataURL(
-        "image/png"
-    );
-
-    link.click();
+`;
 
 });
+
+document
+.getElementById(
+"grandTotal"
+)
+.textContent =
+totalAll;
+
+}
 
 renderTable();
 
