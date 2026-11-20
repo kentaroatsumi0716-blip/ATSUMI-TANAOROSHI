@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>棚卸管理アプリ</title>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    padding:15px;
+    font-family:sans-serif;
+    background:#f5f5f5;
+    color:#000;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:15px;
+}
+
+.summary{
+    background:#fff;
+    padding:15px;
+    border-radius:10px;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    margin-bottom:15px;
+    box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+
+.add-area{
+    display:flex;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.add-area input{
+    flex:1;
+}
+
+input{
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:16px;
+}
+
+button{
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.add-btn{
+    background:#28a745;
+    color:#fff;
+    padding:0 20px;
+}
+
+.image-btn{
+    background:#ff9800;
+    color:#fff;
+    padding:12px 20px;
+    width:100%;
+    margin-bottom:15px;
+}
+
+.table-wrap{
+    background:#fff;
+    border-radius:10px;
+    overflow-x:auto;
+    box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th{
+    background:#007bff;
+    color:#fff;
+    padding:10px;
+    white-space:nowrap;
+}
+
+td{
+    padding:8px;
+    border-bottom:1px solid #ddd;
+    text-align:center;
+    white-space:nowrap;
+    color:#000;
+}
+
+.product-name{
+    text-align:left;
+    font-weight:bold;
+}
+
+.pm{
+    width:32px;
+    height:32px;
+    background:#666;
+    color:#fff;
+    font-size:18px;
+}
+
+.stock{
+    font-weight:bold;
+    font-size:18px;
+    min-width:25px;
+    display:inline-block;
+}
+
+.red{
+    color:red;
+}
+
+.delete-btn{
+    background:#dc3545;
+    color:#fff;
+    padding:8px 10px;
+}
+
+@media(max-width:600px){
+
+body{
+    padding:10px;
+}
+
+th,td{
+    font-size:12px;
+    padding:6px;
+}
+
+.pm{
+    width:28px;
+    height:28px;
+    font-size:16px;
+}
+
+.stock{
+    font-size:16px;
+}
+}
+</style>
+</head>
+
+<body>
+
+<h1>🍾 渥美棚卸管理</h1>
+
+<div class="summary">
+総在庫数 :
+<span id="grandTotal">0</span>
+</div>
+
+<div class="add-area">
+
+<input
+type="text"
+id="productName"
+placeholder="商品名">
+
+<button
+class="add-btn"
+onclick="addProduct()">
+追加
+</button>
+
+</div>
+
+<button
+id="saveImageBtn"
+class="image-btn">
+📷 一覧画像保存
+</button>
+
+<div id="captureArea">
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>商品名</th>
+<th>合計</th>
+<th>冷蔵庫</th>
+<th>バックヤード</th>
+<th>削除</th>
+</tr>
+</thead>
+
+<tbody id="productList">
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+let products =
+JSON.parse(
+localStorage.getItem("inventoryData")
+) || [];
+
+function saveData(){
+
+    localStorage.setItem(
+        "inventoryData",
+        JSON.stringify(products)
+    );
+
+}
+
+function addProduct(){
+
+    const input =
+    document.getElementById(
+        "productName"
+    );
+
+    const name =
+    input.value.trim();
+
+    if(name===""){
+        alert("商品名を入力してください");
+        return;
+    }
+
+    products.push({
+        name:name,
+        fridge:0,
+        backyard:0
+    });
+
+    saveData();
+
+    input.value="";
+
+    renderTable();
+
+}
+
+function changeStock(
+index,
+location,
+amount
+){
+
+    products[index][location] += amount;
+
+    if(
+        products[index][location] < 0
+    ){
+        products[index][location] = 0;
+    }
+
+    saveData();
+
+    renderTable();
+
+}
+
+function deleteProduct(index){
+
+    if(
+        !confirm(
+            products[index].name +
+            " を削除しますか？"
+        )
+    ){
+        return;
+    }
+
+    products.splice(index,1);
+
+    saveData();
+
+    renderTable();
+
+}
+
+function renderTable(){
+
+    const tbody =
+    document.getElementById(
+        "productList"
+    );
+
+    tbody.innerHTML = "";
+
+    let grandTotal = 0;
+
+    products.forEach(
+    (item,index)=>{
+
+        const total =
+        item.fridge +
+        item.backyard;
+
+        grandTotal += total;
+
+        tbody.innerHTML += `
+        <tr>
+
+        <td class="product-name">
+        ${item.name}
+        </td>
+
+        <td class="${
+            total===0 ? 'red' : ''
+        }">
+        ${total}
+        </td>
+
+        <td>
+
+        <button
+        class="pm"
+        onclick="
+        changeStock(
+        ${index},
+        'fridge',
+        -1
+        )">
+        -
+        </button>
+
+        <span
+        class="stock ${
+            item.fridge===0
+            ? 'red'
+            : ''
+        }">
+        ${item.fridge}
+        </span>
+
+        <button
+        class="pm"
+        onclick="
+        changeStock(
+        ${index},
+        'fridge',
+        1
+        )">
+        +
+        </button>
+
+        </td>
+
+        <td>
+
+        <button
+        class="pm"
+        onclick="
+        changeStock(
+        ${index},
+        'backyard',
+        -1
+        )">
+        -
+        </button>
+
+        <span
+        class="stock ${
+            item.backyard===0
+            ? 'red'
+            : ''
+        }">
+        ${item.backyard}
+        </span>
+
+        <button
+        class="pm"
+        onclick="
+        changeStock(
+        ${index},
+        'backyard',
+        1
+        )">
+        +
+        </button>
+
+        </td>
+
+        <td>
+
+        <button
+        class="delete-btn"
+        onclick="
+        deleteProduct(
+        ${index}
+        )">
+        🗑
+        </button>
+
+        </td>
+
+        </tr>
+        `;
+    });
+
+    document.getElementById(
+        "grandTotal"
+    ).textContent = grandTotal;
+
+}
+
+document
+.getElementById("saveImageBtn")
+.addEventListener(
+"click",
+async ()=>{
+
+    const area =
+    document.getElementById(
+        "captureArea"
+    );
+
+    const canvas =
+    await html2canvas(
+        area,
+        {
+            scale:2,
+            useCORS:true
+        }
+    );
+
+    const link =
+    document.createElement("a");
+
+    const now =
+    new Date();
+
+    const fileName =
+    "棚卸一覧_" +
+    now.getFullYear() +
+    ("0"+(now.getMonth()+1)).slice(-2) +
+    ("0"+now.getDate()).slice(-2) +
+    "_" +
+    ("0"+now.getHours()).slice(-2) +
+    ("0"+now.getMinutes()).slice(-2) +
+    ".png";
+
+    link.download = fileName;
+
+    link.href =
+    canvas.toDataURL(
+        "image/png"
+    );
+
+    link.click();
+
+});
+
+renderTable();
+
+</script>
+
+</body>
+</html>
